@@ -15,7 +15,7 @@ import rootReducer from "./rootReducer";
 const persistConfig = {
   key: "root",
   storage: AsyncStorage,
-//   blacklist: ["searchHistory"],
+  // blacklist: ["searchHistory"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

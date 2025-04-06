@@ -13,23 +13,24 @@ import { Provider } from "react-redux";
 import SearchScreen from "./Screens/SearchScreen";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useState } from "react";
-import VoiceSearchModal from "./components/VoiceSearch/VoiceSearchModal";
-
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 export default function Index() {
   const [isVoiceSearchModalVisible, setIsVoiceSearchModalVisible] =
     useState(true);
   return (
-    <Provider store={store}>
-    <PersistGate loading={null} persistor={persistor}>
-      <SafeAreaProvider>
-        <SafeAreaView
-          style={{ flex: 1, paddingTop: 20, backgroundColor: "white" }}
-        >
-          <SearchScreen />
-        </SafeAreaView>
-      </SafeAreaProvider>
-    </PersistGate>
-  </Provider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
+          <SafeAreaProvider>
+            <SafeAreaView
+              style={{ flex: 1, paddingTop: 20, backgroundColor: "white" }}
+            >
+              <SearchScreen />
+            </SafeAreaView>
+          </SafeAreaProvider>
+        </PersistGate>
+      </Provider>
+    </GestureHandlerRootView>
   );
 }
 

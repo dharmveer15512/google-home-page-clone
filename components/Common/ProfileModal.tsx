@@ -40,7 +40,7 @@ const ProfileModal = ({
 
           <View style={styles.header}>
             <View style={styles.profileCircle}>
-              <Text style={styles.profileLetter}>A</Text>
+              <Text style={styles.profileLetter}>D</Text>
             </View>
           </View>
 

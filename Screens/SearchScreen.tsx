@@ -2,125 +2,161 @@ import {
   StyleSheet,
   View,
   TextInput,
-  Image,
   Text,
   TouchableOpacity,
-  SafeAreaView,
-  FlatList,
-  TouchableWithoutFeedback,
-  Platform,
-  Modal,
-  Button,
+  ScrollView,
 } from "react-native";
-import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import ProfileModal from "../components/Common/ProfileModal";
 import Header from "../components/Common/Header";
-import Animated, {
-  useAnimatedStyle,
-  withTiming,
-  useSharedValue,
-  Easing,
-} from "react-native-reanimated";
+import { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import VoiceSearchModal from "../components/VoiceSearch/VoiceSearchModal";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import TextInputsAndSearchHistory from "../components/TextSearchPage/TextInputsAndSearchHistory";
+import ImageCaptureModal from "../components/ImageSearchpage/ImageCaptureModal";
+import Fidgets from "../components/Common/Fidgets";
+import Stories from "../components/Common/Stories";
 const SearchScreen = () => {
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
+  const [isImageCaptureModalVisible, setIsImageCaptureModalVisible] =
+    useState(false);
   const [isVoiceSearchModalVisible, setIsVoiceSearchModalVisible] =
     useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
   const headerOpacity = useSharedValue(1);
-
+  const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
 
   const headerAnimatedStyle = useAnimatedStyle(() => ({
     opacity: headerOpacity.value,
   }));
 
-  const insets = useSafeAreaInsets();
-  return (
-    <View style={[styles.container]}>
-      <VoiceSearchModal
-        visible={isVoiceSearchModalVisible}
-        onClose={() => setIsVoiceSearchModalVisible(false)}
+  if (isImageCaptureModalVisible) {
+    return (
+      <ImageCaptureModal
+        visible={isImageCaptureModalVisible}
+        onClose={() => setIsImageCaptureModalVisible(false)}
+        onCapture={() => {}}
       />
-      <ProfileModal
-        visible={isProfileModalVisible}
-        onClose={() => setIsProfileModalVisible(false)}
-      />
-      <Header
-        onLayout={({ nativeEvent }) => {
-          setHeaderHeight(() => nativeEvent.layout.height);
-        }}
-        style={headerAnimatedStyle}
-        onProfilePress={() => setIsProfileModalVisible(true)}
-      />
+    );
+  }
 
-      <View style={styles.searchContainer}>
-        <Ionicons
-          style={{ zIndex: 1 }}
-          name={focused ? "arrow-back" : "search"}
-          size={20}
-          color="#9AA0A6"
-          onPress={() => setFocused(true)}
+  return (
+    <ScrollView showsVerticalScrollIndicator={false}>
+      <View style={[styles.container]}>
+        <VoiceSearchModal
+          onQueryChange={(query) => {
+            setQuery(() => query);
+            setIsVoiceSearchModalVisible(() => false);
+            setFocused(() => true);
+          }}
+          visible={isVoiceSearchModalVisible}
+          onClose={() => setIsVoiceSearchModalVisible(false)}
         />
-        <TouchableOpacity
-          onPress={() => setFocused(true)}
-          style={styles.searchInputContainer}
-        >
-          <TextInput
-            editable={false}
-            clearTextOnFocus
-            style={styles.searchInput}
-            placeholder="Search"
-            placeholderTextColor="#9AA0A6"
-            submitBehavior="submit"
-            enterKeyHint="search"
-            returnKeyLabel="Search"
-            returnKeyType="search"
-            onPress={() => setFocused(true)}
-          />
-        </TouchableOpacity>
-        <View style={styles.iconContainer}>
+        <ProfileModal
+          visible={isProfileModalVisible}
+          onClose={() => setIsProfileModalVisible(false)}
+        />
+
+        <Header
+          onLayout={({ nativeEvent }) => {
+            setHeaderHeight(() => nativeEvent.layout.height);
+          }}
+          style={headerAnimatedStyle}
+          onProfilePress={() => setIsProfileModalVisible(true)}
+        />
+
+        <View style={styles.searchContainer}>
           <Ionicons
-            onPress={() => setIsVoiceSearchModalVisible(true)}
-            name="mic"
+            style={{ zIndex: 1 }}
+            name={focused ? "arrow-back" : "search"}
             size={20}
             color="#9AA0A6"
+            onPress={() => {
+              setFocused(true);
+              setQuery("");
+            }}
           />
-          <Ionicons name="camera" size={20} color="#9AA0A6" />
+          <TouchableOpacity
+            onPress={() => {
+              setFocused(true);
+              setQuery("");
+            }}
+            style={styles.searchInputContainer}
+          >
+            <TextInput
+              editable={false}
+              clearTextOnFocus
+              style={styles.searchInput}
+              placeholder="Search"
+              placeholderTextColor="#9AA0A6"
+              submitBehavior="submit"
+              enterKeyHint="search"
+              returnKeyLabel="Search"
+              returnKeyType="search"
+              onPress={() => {
+                setFocused(true);
+                setQuery("");
+              }}
+            />
+          </TouchableOpacity>
+          <View style={styles.iconContainer}>
+            <Ionicons
+              onPress={() => setIsVoiceSearchModalVisible(true)}
+              name="mic"
+              size={20}
+              color="#9AA0A6"
+            />
+            <Ionicons
+              onPress={() => setIsImageCaptureModalVisible(true)}
+              name="camera"
+              size={20}
+              color="#9AA0A6"
+            />
+          </View>
         </View>
-      </View>
 
-      {focused && (
-        <TextInputsAndSearchHistory
-          visible={focused}
-          onClose={() => {
-            setFocused(false);
-          }}
-          headerOpacity={headerOpacity}
-          focused={focused}
-          setFocused={setFocused}
-          setIsVoiceSearchModalVisible={() => {
-            setFocused(false);
-            setIsVoiceSearchModalVisible(true);
-          }}
-          headerHeight={headerHeight}
-        />
-      )}
+        {focused && (
+          <TextInputsAndSearchHistory
+            setIsImageCaptureModalVisible={() => {
+              setFocused(false);
+              setIsImageCaptureModalVisible(true);
+            }}
+            query={query}
+            visible={focused}
+            onClose={() => {
+              setFocused(false);
+            }}
+            headerOpacity={headerOpacity}
+            focused={focused}
+            setFocused={setFocused}
+            setIsVoiceSearchModalVisible={() => {
+              setFocused(false);
+              setIsVoiceSearchModalVisible(true);
+            }}
+            headerHeight={headerHeight}
+          />
+        )}
 
-      {!focused && (
         <View style={styles.quickAccessContainer}>
-          <TouchableOpacity style={styles.quickAccessItem}>
+          <TouchableOpacity
+            onPress={() => {
+              setIsImageCaptureModalVisible(true);
+            }}
+            style={styles.quickAccessItem}
+          >
             <View style={[styles.iconCircle, { backgroundColor: "#000" }]}>
               <Ionicons name="images" size={24} color="#fff" />
             </View>
             <Text style={styles.quickAccessText}>Images</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.quickAccessItem}>
+          <TouchableOpacity
+            onPress={() => {
+              setIsVoiceSearchModalVisible(true);
+            }}
+            style={styles.quickAccessItem}
+          >
             <View style={[styles.iconCircle, { backgroundColor: "#000" }]}>
               <Ionicons name="language" size={24} color="#fff" />
             </View>
@@ -141,8 +177,10 @@ const SearchScreen = () => {
             <Text style={styles.quickAccessText}>Music</Text>
           </TouchableOpacity>
         </View>
-      )}
-    </View>
+        <Fidgets />
+        <Stories />
+      </View>
+    </ScrollView>
   );
 };
 

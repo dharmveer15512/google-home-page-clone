@@ -19,7 +19,9 @@ const Header = ({
       style={[styles.container, props?.style]}
     >
       <Image
-        source={require("../../assets/images/google.png")}
+        source={{
+          uri: "https://icons.veryicon.com/png/128/system/basic-icon-of-financial-system/test-33.png",
+        }}
         style={styles.leftLogo}
       />
       <View>

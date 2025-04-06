@@ -22,9 +22,11 @@ import { Audio } from "expo-av";
 const VoiceSearchModal = ({
   onClose,
   visible,
+  onQueryChange,
 }: {
   onClose: () => void;
   visible: boolean;
+  onQueryChange: (query: string) => void;
 }) => {
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [transcription, setTranscription] = useState("");
@@ -63,13 +65,13 @@ const VoiceSearchModal = ({
       cancelAnimation(scale);
       await recordingRef.current.stopAndUnloadAsync();
       const uri = recordingRef.current.getURI();
-      console.log("Recording saved at:", uri);
       setRecording(null);
 
       // 🔊 Send to backend for transcription
       if (uri) {
         const text = await transcribeAudio(uri);
         setTranscription(text);
+        onQueryChange(text);
       }
     } catch (err) {
       console.error("Failed to stop recording", err);
@@ -84,24 +86,31 @@ const VoiceSearchModal = ({
       name: "recording.m4a",
     } as any);
 
-    const response = await fetch(
-      "https://api.openai.com/v1/audio/transcriptions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: "Bearer YOUR_OPENAI_API_KEY",
-        },
-        body: formData,
-      }
-    );
+    // for now mocking the transcription
+    return "Hello, how are you?";
+    // const response = await fetch(
+    //   "https://api.openai.com/v1/audio/transcriptions",
+    //   {
+    //     method: "POST",
+    //     headers: {
+    //       Authorization: "Bearer YOUR_OPENAI_API_KEY",
+    //     },
+    //     body: formData,
+    //   }
+    // );
 
-    const result = await response.json();
-    return result.text || "Could not transcribe.";
+    // const result = await response.json();
+    // return result.text || "Could not transcribe.";
   };
 
   useEffect(() => {
-    requestMicrophonePermission();
-  }, []);
+    if (visible) requestMicrophonePermission();
+    return () => {
+      if (recordingRef.current) {
+        recordingRef.current.stopAndUnloadAsync();
+      }
+    };
+  }, [visible]);
 
   const dots = [
     { color: "#4285F4" }, // Blue
@@ -171,7 +180,7 @@ const VoiceSearchModal = ({
         </View>
 
         <Pressable onPress={stopRecording} style={styles.searchButton}>
-          <Text style={styles.searchButtonText}>🎵 Search a song</Text>
+          <Text style={styles.searchButtonText}>Stop recording</Text>
         </Pressable>
       </View>
     </Modal>

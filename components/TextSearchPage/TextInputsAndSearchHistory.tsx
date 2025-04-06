@@ -1,11 +1,16 @@
 import {
+  Button,
   FlatList,
+  InputAccessoryView,
+  Keyboard,
   Modal,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  Image,
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import Animated, {
@@ -19,6 +24,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { Easing, withTiming } from "react-native-reanimated";
 import { addSearchHistory } from "../../redux/slices/searchHistorySlice";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const TextInputsAndSearchHistory = ({
   headerHeight,
@@ -28,6 +34,8 @@ const TextInputsAndSearchHistory = ({
   headerOpacity,
   onClose,
   visible,
+  query = "",
+  setIsImageCaptureModalVisible,
 }: {
   headerHeight: number;
   focused: boolean;
@@ -36,15 +44,29 @@ const TextInputsAndSearchHistory = ({
   headerOpacity: SharedValue<number>;
   onClose: () => void;
   visible: boolean;
+  query: string;
+  setIsImageCaptureModalVisible: (isImageCaptureModalVisible: boolean) => void;
 }) => {
+  const insets = useSafeAreaInsets();
+
   const searchBarTop = useSharedValue(headerHeight);
   const searchBarScale = useSharedValue(1);
   const searchBarMargin = useSharedValue(20);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(query);
   const textInputRef = useRef<TextInput>(null);
   const searchHistory = useSelector(
     (state: RootState) => state.searchHistory.value
   );
+  const [searchResults, setSearchResults] = useState<
+    {
+      id: number;
+      title: string;
+      description: string;
+      url: string;
+      source: string;
+      imageUrl?: string;
+    }[]
+  >([]);
   const searchBarAnimatedStyle = useAnimatedStyle(() => ({
     transform: [
       { translateY: searchBarTop.value },
@@ -54,14 +76,17 @@ const TextInputsAndSearchHistory = ({
   }));
   const animateOnFocus = (focused: boolean) => {
     if (focused) {
-      Haptics.selectionAsync();
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
+      setTimeout(() => {
+        textInputRef.current?.focus();
+      }, 100);
     }
     setFocused(focused);
     headerOpacity.value = withTiming(focused ? 1 : 1, {
       duration: 300,
       easing: Easing.bezier(0.25, 0.1, 0.25, 1),
     });
-    searchBarTop.value = withTiming(focused ? 20 : headerHeight * 2, {
+    searchBarTop.value = withTiming(focused ? insets.top : headerHeight, {
       duration: 300,
       easing: Easing.bezier(0.25, 0.1, 0.25, 1),
     });
@@ -73,14 +98,6 @@ const TextInputsAndSearchHistory = ({
     searchBarMargin.value = withTiming(focused ? 0 : 20, {
       duration: 300,
     });
-
-    setTimeout(() => {
-      if (!focused) {
-        // textInputRef.current?.blur();
-        // setSearchQuery("");
-        // onClose();
-      }
-    }, 300);
   };
 
   const dispatch = useDispatch();
@@ -90,6 +107,27 @@ const TextInputsAndSearchHistory = ({
       animateOnFocus(true);
     }
   }, [visible]);
+
+  const onSearch = (query: string) => {
+    setSearchQuery(query);
+
+    const results = Array.from({ length: 10 }, (_, index) => {
+      return {
+        id: index,
+        title: `Product ${query} ${index}`,
+        description: `Description Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum ${query} ${index}`,
+        url:
+          index % 2 === 0
+            ? "https://en.wikipedia.org/wiki"
+            : "https://www.amazon.com",
+        source: index % 2 === 0 ? "Wikipedia" : "Amazon",
+        imageUrl: "https://picsum.photos/200/300",
+      };
+    });
+
+    setSearchResults(results);
+  };
+  const inputAccessoryViewID = "keyboardClose";
 
   return (
     <Modal visible={visible} transparent={false}>
@@ -110,21 +148,20 @@ const TextInputsAndSearchHistory = ({
             <TouchableOpacity style={styles.searchInputContainer}>
               <TextInput
                 ref={textInputRef}
-                clearTextOnFocus
                 style={styles.searchInput}
                 placeholder="Search"
                 placeholderTextColor="#9AA0A6"
-                onFocus={() => animateOnFocus(true)}
-                onBlur={() => animateOnFocus(false)}
                 value={searchQuery}
                 onChangeText={(text) => setSearchQuery(text)}
                 submitBehavior="submit"
                 enterKeyHint="search"
                 returnKeyLabel="Search"
                 returnKeyType="search"
-                onSubmitEditing={() => {
-                  if (searchQuery) {
+                onSubmitEditing={(e) => {
+                  if (searchQuery && searchQuery !== searchHistory?.[0]) {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
                     dispatch(addSearchHistory(searchQuery));
+                    onSearch(searchQuery);
                   }
                 }}
               />
@@ -136,7 +173,12 @@ const TextInputsAndSearchHistory = ({
                 size={20}
                 color="#9AA0A6"
               />
-              <Ionicons name="camera" size={20} color="#9AA0A6" />
+              <Ionicons
+                onPress={() => setIsImageCaptureModalVisible(true)}
+                name="camera"
+                size={20}
+                color="#9AA0A6"
+              />
             </View>
           </View>
 
@@ -145,11 +187,41 @@ const TextInputsAndSearchHistory = ({
               <FlatList
                 data={searchHistory}
                 renderItem={({ item }) => (
-                  <TouchableOpacity style={styles.historyItem}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSearchQuery(item);
+                      onSearch(item);
+                    }}
+                    style={styles.historyItem}
+                  >
                     <Ionicons name="time-outline" size={20} color="#9AA0A6" />
                     <Text style={styles.historyText}>{item}</Text>
                   </TouchableOpacity>
                 )}
+              />
+            )}
+            {focused && searchQuery.length !== 0 && (
+              <FlatList
+                contentContainerStyle={{ paddingBottom: 100 }}
+                data={searchResults}
+                renderItem={({ item }) => (
+                  <TouchableOpacity style={styles.searchResultItem}>
+                    <View style={styles.resultHeader}>
+                      {item.imageUrl && (
+                        <Image
+                          source={{ uri: item.imageUrl }}
+                          style={styles.sourceLogo}
+                        />
+                      )}
+                      <Text style={styles.sourceUrl}>{item.url}</Text>
+                    </View>
+                    <Text style={styles.resultTitle}>{item.title}</Text>
+                    <Text style={styles.resultDescription} numberOfLines={2}>
+                      {item.description}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                ItemSeparatorComponent={() => <View style={styles.separator} />}
               />
             )}
           </View>
@@ -173,7 +245,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     padding: 12,
     borderRadius: 24,
-    marginBottom: 20,
   },
   searchInput: {
     flex: 1,
@@ -225,5 +296,41 @@ const styles = StyleSheet.create({
   historyText: {
     fontSize: 16,
     color: "#202124",
+  },
+  platformIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  searchResultItem: {
+    paddingVertical: 12,
+  },
+  resultHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  sourceLogo: {
+    width: 16,
+    height: 16,
+    marginRight: 8,
+    borderRadius: 8,
+  },
+  sourceUrl: {
+    fontSize: 12,
+    color: "#000",
+  },
+  resultTitle: {
+    fontSize: 16,
+    color: "#1a0dab",
+    marginBottom: 4,
+  },
+  resultDescription: {
+    fontSize: 14,
+    color: "#000",
+    lineHeight: 20,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: "#e8eaed",
   },
 });
