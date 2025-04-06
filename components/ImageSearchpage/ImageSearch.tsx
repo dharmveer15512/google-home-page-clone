@@ -6,15 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ImagePickerWithCrop from "./ImagePickerWithCrop";
 import ExpoImageManipulator from "../../Libraries/ExpoImageManipulator";
 import SearchBottomSheet from "./SearchBottomSheet";
-export default function ImageCaptureModal({
-  visible,
-  onClose,
-  onCapture,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  onCapture: () => void;
-}) {
+export default function ImageSearch({ onClose }: { onClose: () => void }) {
   const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
   const [image, setImage] = useState<string | null>(null);
@@ -31,7 +23,15 @@ export default function ImageCaptureModal({
   if (!permission.granted) {
     // Camera permissions are not granted yet.
     return (
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          {
+            justifyContent: "center",
+            alignItems: "center",
+          },
+        ]}
+      >
         <Text style={styles.message}>
           We need your permission to show the camera
         </Text>
@@ -49,73 +49,62 @@ export default function ImageCaptureModal({
     }
   };
 
-  if (visible)
-    return (
-      // <Modal
-      //   visible={visible}
-      //   onRequestClose={() => {
-      //     setImage(null);
-      //     onClose();
-      //   }}
-      //   presentationStyle="overFullScreen" // ✅ important for gestures
-      //   hardwareAccelerated={true}
-      // >
-      <View style={styles.container}>
-        {image ? (
-          <ExpoImageManipulator
-            SearchBottomSheet={<SearchBottomSheet image={image} />}
-            onClose={() => {
-              setImage(null);
-            }}
-            inset={insets}
-            squareAspect={true}
-            btnTexts={{
-              crop: "Crop",
-              rotate: "Rotate",
-              done: "Done",
-              processing: "Processing...",
-            }}
-            dragVelocity={0}
-            resizeVelocity={0}
-            photo={{ uri: image }}
-            isVisible={true}
-            onPictureChoosed={(data: any) => {
-              setImage(data.uri);
-            }}
-            onToggleModal={() => {}}
-            saveOptions={{
-              compress: 1,
-              format: "png",
-              base64: true,
-            }}
+  return (
+    <View style={styles.container}>
+      {image ? (
+        <ExpoImageManipulator
+          SearchBottomSheet={<SearchBottomSheet image={image} />}
+          onClose={() => {
+            setImage(null);
+          }}
+          inset={insets}
+          squareAspect={true}
+          btnTexts={{
+            crop: "Crop",
+            rotate: "Rotate",
+            done: "Done",
+            processing: "Processing...",
+          }}
+          dragVelocity={0}
+          resizeVelocity={0}
+          photo={{ uri: image }}
+          isVisible={true}
+          onPictureChoosed={(data: any) => {
+            setImage(data.uri);
+          }}
+          onToggleModal={() => {}}
+          saveOptions={{
+            compress: 1,
+            format: "png",
+            base64: true,
+          }}
+        />
+      ) : (
+        <CameraView ref={cameraRef} style={styles.camera} facing={"back"}>
+          <Ionicons
+            style={[styles.backButton, { top: insets.top }]}
+            name="chevron-back-outline"
+            size={35}
+            color="#fff"
+            onPress={onClose}
           />
-        ) : (
-          <CameraView ref={cameraRef} style={styles.camera} facing={"front"}>
-            <Ionicons
-              style={[styles.backButton, { top: insets.top }]}
-              name="chevron-back-outline"
-              size={35}
-              color="#fff"
-              onPress={onClose}
-            />
-            <Pressable
-              style={[styles.buttonContainer, { bottom: insets.bottom }]}
-              onPress={takePhoto}
-            >
-              <View style={styles.button}>
-                <AntDesign name="search1" size={30} color="#000" />
-              </View>
-            </Pressable>
-            <View
-              style={[styles.imagePickerContainer, { bottom: insets.bottom }]}
-            >
-              <ImagePickerWithCrop onImagePicked={(image) => setImage(image)} />
+          <Pressable
+            style={[styles.buttonContainer, { bottom: insets.bottom }]}
+            onPress={takePhoto}
+          >
+            <View style={styles.button}>
+              <AntDesign name="search1" size={30} color="#000" />
             </View>
-          </CameraView>
-        )}
-      </View>
-      // </Modal>
-    );
+          </Pressable>
+          <View
+            style={[styles.imagePickerContainer, { bottom: insets.bottom }]}
+          >
+            <ImagePickerWithCrop onImagePicked={(image) => setImage(image)} />
+          </View>
+        </CameraView>
+      )}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({

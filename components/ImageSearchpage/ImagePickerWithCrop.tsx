@@ -8,8 +8,6 @@ const ImagePickerWithCrop = ({
 }: {
   onImagePicked: (image: string) => void;
 }) => {
-  const [image, setImage] = useState<string | null>(null);
-
   const pickImage = async () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -27,7 +25,6 @@ const ImagePickerWithCrop = ({
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
       onImagePicked(result.assets[0].uri);
     }
   };

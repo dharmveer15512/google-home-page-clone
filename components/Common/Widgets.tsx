@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import React from "react";
 
-const Fidgets = () => {
+const Widgets = () => {
   const fidgets = [
     {
       title: "Gurugram",
@@ -33,7 +33,7 @@ const Fidgets = () => {
     >
       {/* Location Card */}
       {fidgets.map((fidget) => (
-        <View style={styles.card}>
+        <View key={fidget.title} style={styles.card}>
           <Text style={styles.location}>{fidget.title}</Text>
           <View style={styles.descriptionContainer}>
             <Text style={styles.description}>{fidget.description}</Text>
@@ -45,7 +45,7 @@ const Fidgets = () => {
   );
 };
 
-export default Fidgets;
+export default Widgets;
 
 const styles = StyleSheet.create({
   container: {

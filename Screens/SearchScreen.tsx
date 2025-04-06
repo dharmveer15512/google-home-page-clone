@@ -13,13 +13,12 @@ import Header from "../components/Common/Header";
 import { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import VoiceSearchModal from "../components/VoiceSearch/VoiceSearchModal";
 import TextInputsAndSearchHistory from "../components/TextSearchPage/TextInputsAndSearchHistory";
-import ImageCaptureModal from "../components/ImageSearchpage/ImageCaptureModal";
-import Fidgets from "../components/Common/Fidgets";
+import ImageSearch from "../components/ImageSearchpage/ImageSearch";
+import Widgets from "../components/Common/Widgets";
 import Stories from "../components/Common/Stories";
 const SearchScreen = () => {
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
-  const [isImageCaptureModalVisible, setIsImageCaptureModalVisible] =
-    useState(false);
+  const [isImageSearchVisible, setIsImageSearchVisible] = useState(false);
   const [isVoiceSearchModalVisible, setIsVoiceSearchModalVisible] =
     useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -31,14 +30,8 @@ const SearchScreen = () => {
     opacity: headerOpacity.value,
   }));
 
-  if (isImageCaptureModalVisible) {
-    return (
-      <ImageCaptureModal
-        visible={isImageCaptureModalVisible}
-        onClose={() => setIsImageCaptureModalVisible(false)}
-        onCapture={() => {}}
-      />
-    );
+  if (isImageSearchVisible) {
+    return <ImageSearch onClose={() => setIsImageSearchVisible(false)} />;
   }
 
   return (
@@ -108,7 +101,7 @@ const SearchScreen = () => {
               color="#9AA0A6"
             />
             <Ionicons
-              onPress={() => setIsImageCaptureModalVisible(true)}
+              onPress={() => setIsImageSearchVisible(true)}
               name="camera"
               size={20}
               color="#9AA0A6"
@@ -118,9 +111,9 @@ const SearchScreen = () => {
 
         {focused && (
           <TextInputsAndSearchHistory
-            setIsImageCaptureModalVisible={() => {
+            setIsImageSearchVisible={() => {
               setFocused(false);
-              setIsImageCaptureModalVisible(true);
+              setIsImageSearchVisible(true);
             }}
             query={query}
             visible={focused}
@@ -141,7 +134,7 @@ const SearchScreen = () => {
         <View style={styles.quickAccessContainer}>
           <TouchableOpacity
             onPress={() => {
-              setIsImageCaptureModalVisible(true);
+              setIsImageSearchVisible(true);
             }}
             style={styles.quickAccessItem}
           >
@@ -177,7 +170,7 @@ const SearchScreen = () => {
             <Text style={styles.quickAccessText}>Music</Text>
           </TouchableOpacity>
         </View>
-        <Fidgets />
+        <Widgets />
         <Stories />
       </View>
     </ScrollView>

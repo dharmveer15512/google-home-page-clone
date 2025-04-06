@@ -35,7 +35,7 @@ const TextInputsAndSearchHistory = ({
   onClose,
   visible,
   query = "",
-  setIsImageCaptureModalVisible,
+  setIsImageSearchVisible,
 }: {
   headerHeight: number;
   focused: boolean;
@@ -45,7 +45,7 @@ const TextInputsAndSearchHistory = ({
   onClose: () => void;
   visible: boolean;
   query: string;
-  setIsImageCaptureModalVisible: (isImageCaptureModalVisible: boolean) => void;
+  setIsImageSearchVisible: (isImageSearchVisible: boolean) => void;
 }) => {
   const insets = useSafeAreaInsets();
 
@@ -174,7 +174,7 @@ const TextInputsAndSearchHistory = ({
                 color="#9AA0A6"
               />
               <Ionicons
-                onPress={() => setIsImageCaptureModalVisible(true)}
+                onPress={() => setIsImageSearchVisible(true)}
                 name="camera"
                 size={20}
                 color="#9AA0A6"

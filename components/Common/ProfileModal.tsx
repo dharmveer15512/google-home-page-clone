@@ -1,7 +1,21 @@
-import { StyleSheet, Text, View, TouchableOpacity, Modal } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Modal,
+  Pressable,
+} from "react-native";
 import React from "react";
-import { Ionicons } from "@expo/vector-icons"; // Assuming you're using Expo for icons
+import { AntDesign, Ionicons } from "@expo/vector-icons"; // Assuming you're using Expo for icons
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  useAuth,
+  useOAuth,
+  useUser,
+  useClerk,
+  useSSO,
+} from "@clerk/clerk-expo";
 const ProfileModal = ({
   visible,
   onClose,
@@ -10,7 +24,10 @@ const ProfileModal = ({
   onClose: () => void;
 }) => {
   // const insets = useSafeAreaInsets();
-
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
+  const clerk = useClerk();
+  const { startSSOFlow } = useSSO();
   const menuItems = [
     { icon: "person", label: "Manage your Google Account" },
     { icon: "glasses-outline", label: "Turn on Incognito" },
@@ -23,7 +40,31 @@ const ProfileModal = ({
     { icon: "diamond-outline", label: "Search personalisation" },
     { icon: "settings-outline", label: "Settings" },
     { icon: "help-circle-outline", label: "Help and feedback" },
+    {
+      icon: "log-out-outline",
+      label: "Sign out",
+      onPress: () => {
+        clerk.signOut();
+      },
+    },
   ];
+
+  const { startOAuthFlow } = useOAuth({
+    strategy: "oauth_google",
+    redirectUrl: "demo://oauth-callback",
+  });
+
+  const handleSignIn = async () => {
+    try {
+      const { createdSessionId, setActive } = await startOAuthFlow();
+      if (createdSessionId) {
+        await setActive?.({ session: createdSessionId });
+        console.log("Signed in with Google!");
+      }
+    } catch (err) {
+      console.error("OAuth error", err);
+    }
+  };
 
   return (
     <Modal
@@ -40,16 +81,32 @@ const ProfileModal = ({
 
           <View style={styles.header}>
             <View style={styles.profileCircle}>
-              <Text style={styles.profileLetter}>D</Text>
+              {isSignedIn ? (
+                <Text style={styles.profileLetter}>
+                  {user?.firstName?.charAt(0)}
+                </Text>
+              ) : (
+                <AntDesign name="user" size={24} color="#fff" />
+              )}
             </View>
           </View>
 
-          {menuItems.map((item, index) => (
-            <TouchableOpacity key={index} style={styles.menuItem}>
-              <Ionicons name={item.icon as any} size={24} color="#000" />
-              <Text style={styles.menuText}>{item.label}</Text>
-            </TouchableOpacity>
-          ))}
+          {isSignedIn ? (
+            menuItems.map((item, index) => (
+              <TouchableOpacity
+                onPress={item.onPress}
+                key={index}
+                style={styles.menuItem}
+              >
+                <Ionicons name={item.icon as any} size={24} color="#000" />
+                <Text style={styles.menuText}>{item.label}</Text>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Pressable style={styles.footer} onPress={() => handleSignIn()}>
+              <Text style={styles.footerText}>Sign in</Text>
+            </Pressable>
+          )}
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Privacy Policy</Text>

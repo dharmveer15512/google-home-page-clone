@@ -8,11 +8,14 @@ import {
 } from "react-native";
 import React from "react";
 import Animated from "react-native-reanimated";
-
+import { useAuth, useUser } from "@clerk/clerk-expo";
+import { AntDesign } from "@expo/vector-icons";
 const Header = ({
   onProfilePress,
   ...props
 }: { onProfilePress: () => void } & ViewProps) => {
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
   return (
     <Animated.View
       onLayout={props?.onLayout}
@@ -44,7 +47,11 @@ const Header = ({
         style={styles.userNameContainer}
         onPress={onProfilePress}
       >
-        <Text style={styles.userName}>D</Text>
+        {isSignedIn ? (
+          <Text style={styles.userName}>{user?.firstName?.charAt(0)}</Text>
+        ) : (
+          <AntDesign name="user" size={24} color="#fff" />
+        )}
       </TouchableOpacity>
     </Animated.View>
   );
